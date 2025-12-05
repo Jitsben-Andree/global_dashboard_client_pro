@@ -1,0 +1,67 @@
+// Definición del cliente y fuente de datos
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --------------------------------------
+// MODELOS DE USUARIO Y ACTIVIDAD
+// --------------------------------------
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // Hash bcrypt
+  name      String?
+  createdAt DateTime @default(now())
+  
+  // Relaciones
+  favorites Favorite[]
+  history   SearchHistory[]
+}
+
+model Favorite {
+  id          String   @id @default(uuid())
+  userId      String
+  entityType  String   // "COUNTRY" o "PROVINCE"
+  entityId    String   // Código (AR) o Nombre
+  entityName  String   // Nombre legible para mostrar en UI
+  savedAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model SearchHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  query     String
+  type      String   // "COUNTRY", "PROVINCE", "NEWS"
+  searchedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// --------------------------------------
+// MODELOS DE CACHÉ (Estrategia de Ahorro API)
+// --------------------------------------
+
+model CountryCache {
+  code        String   @id // Ej: "PE", "AR", "ES"
+  name        String
+  data        Json     // Respuesta completa de REST Countries API
+  updatedAt   DateTime @updatedAt
+  expiresAt   DateTime // Para invalidar caché (ej: cada 30 días)
+}
+
+model ProvinceCache {
+  id          String   @id @default(uuid())
+  countryCode String   // Ej: "PE"
+  data        Json     // Lista de provincias de GeoDB API
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([countryCode]) // Solo una caché de provincias por país
+}

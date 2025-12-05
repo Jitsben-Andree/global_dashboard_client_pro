@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------------------
+  # 1. BASE DE DATOS
+  # ----------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    container_name: global_dashboard_db_pro
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: "0102" # Recomendación: Cambia esto por algo más difícil en el futuro
+      POSTGRES_DB: GLOBAL_INFO
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_pro:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d GLOBAL_INFO"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------
+  # 2. BACKEND API
+  # ----------------------------------------------------
+  backend:
+    build: ./backend
+    container_name: global_dashboard_api_pro
+    restart: always
+    ports:
+      - "8010:8010"
+    environment:
+      - DATABASE_URL=postgresql://admin:0102@db:5432/GLOBAL_INFO?schema=public
+      - JWT_SECRET=super_secreto_cambiar_esto_en_vps
+      - NODE_ENV=production
+      - PORT=8010
+      
+      # IMPORTANTE: Aquí va la IP de tu VPS, no localhost
+      - FRONTEND_URL=http://147.79.87.94:8011
+      
+      # API Keys (Las lee del archivo .env del servidor si existen, o ponlas directas)
+      - RAPIDAPI_KEY=${RAPIDAPI_KEY}
+      - NEWSDATA_API_KEY=${NEWSDATA_API_KEY}
+    
+    # NOTA: Quitamos los 'volumes' de código. En producción el código vive DENTRO de la imagen.
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ----------------------------------------------------
+  # 3. FRONTEND CLIENT
+  # ----------------------------------------------------
+  frontend:
+    build: ./frontend
+    container_name: global_dashboard_client_pro
+    restart: always
+    ports:
+      - "8011:8011"
+    environment:
+      # IMPORTANTE: El navegador del usuario necesita esta IP para encontrar la API
+      - NEXT_PUBLIC_API_URL=http://147.79.87.94:8010/api
+    
+    # NOTA: Quitamos 'volumes', 'command' y 'WATCHPACK'. 
+    # Usamos lo que diga el Dockerfile (npm start).
+    depends_on:
+      - backend
+
+volumes:
+  pgdata_pro:
