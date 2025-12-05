@@ -1,19 +1,17 @@
 version: '3.8'
 
 services:
-  # ----------------------------------------------------
   # 1. BASE DE DATOS
-  # ----------------------------------------------------
   db:
     image: postgres:15-alpine
     container_name: global_dashboard_db_pro
     restart: always
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: "0102" # Recomendación: Cambia esto por algo más difícil en el futuro
+      POSTGRES_PASSWORD: "0102"
       POSTGRES_DB: GLOBAL_INFO
     ports:
-      - "5434:5432"
+      - "5434:5432" 
     volumes:
       - pgdata_pro:/var/lib/postgresql/data
     healthcheck:
@@ -22,9 +20,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # ----------------------------------------------------
   # 2. BACKEND API
-  # ----------------------------------------------------
   backend:
     build: ./backend
     container_name: global_dashboard_api_pro
@@ -37,33 +33,28 @@ services:
       - NODE_ENV=production
       - PORT=8010
       
-      # IMPORTANTE: Aquí va la IP de tu VPS, no localhost
+      # CORS: Permitir conexiones desde tu frontend en la IP pública
       - FRONTEND_URL=http://147.79.87.94:8011
       
-      # API Keys (Las lee del archivo .env del servidor si existen, o ponlas directas)
-      - RAPIDAPI_KEY=${RAPIDAPI_KEY}
-      - NEWSDATA_API_KEY=${NEWSDATA_API_KEY}
+
     
-    # NOTA: Quitamos los 'volumes' de código. En producción el código vive DENTRO de la imagen.
     depends_on:
       db:
         condition: service_healthy
 
-  # ----------------------------------------------------
   # 3. FRONTEND CLIENT
-  # ----------------------------------------------------
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://147.79.87.94:8010/api
     container_name: global_dashboard_client_pro
     restart: always
     ports:
       - "8011:8011"
     environment:
-      # IMPORTANTE: El navegador del usuario necesita esta IP para encontrar la API
+      # Variable para el servidor en tiempo de ejecución
       - NEXT_PUBLIC_API_URL=http://147.79.87.94:8010/api
-    
-    # NOTA: Quitamos 'volumes', 'command' y 'WATCHPACK'. 
-    # Usamos lo que diga el Dockerfile (npm start).
     depends_on:
       - backend
 
