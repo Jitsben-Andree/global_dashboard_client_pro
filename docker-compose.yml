@@ -13,7 +13,7 @@ services:
       POSTGRES_PASSWORD: "0102" # Recomendación: Cambia esto por algo más difícil en el futuro
       POSTGRES_DB: GLOBAL_INFO
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - pgdata_pro:/var/lib/postgresql/data
     healthcheck:
