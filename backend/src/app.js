@@ -5,11 +5,11 @@ import routes from './routes/index.js';
 
 const app = express();
 
-// 1. Middlewares Globales
+//  Middlewares Globales
 app.use(express.json()); // Para entender JSON en el body
 app.use(cookieParser()); // Para leer cookies (JWT)
 
-// 2. Configuración de CORS
+// Configuración de CORS
 app.use(cors({
   // Permitimos 3 orígenes: Tu variable de entorno, el puerto docker interno, y tu frontend local
   origin: [

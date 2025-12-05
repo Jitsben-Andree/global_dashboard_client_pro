@@ -11,13 +11,13 @@ const main = async () => {
   try {
     // Intentar conectar a la BD antes de iniciar
     await prisma.$connect();
-    console.log('✅ Conexión a Base de Datos (PostgreSQL) exitosa');
+    console.log(' Conexión a Base de Datos (PostgreSQL) exitosa');
 
     app.listen(PORT, () => {
-      console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+      console.log(` Servidor corriendo en http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error('❌ Error al iniciar el servidor:', error);
+    console.error('Error al iniciar el servidor:', error);
     process.exit(1);
   }
 };
