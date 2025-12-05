@@ -4,7 +4,6 @@ import { authRequired } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-// Protegemos la ruta para que solo usuarios logueados vean provincias
-router.get('/:countryCode', authRequired, getProvinces);
+router.get('/', authRequired, getProvinces);
 
 export default router;
