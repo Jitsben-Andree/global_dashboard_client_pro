@@ -1,8 +1,7 @@
 import { State } from 'country-state-city'; // 1. Importamos la librería
 import prisma from '../lib/prisma.js';
 
-// Mapeo de respaldo para códigos ISO-3 a ISO-2
-// (La librería usa códigos de 2 letras como PE, AR, US)
+
 const iso3ToIso2 = {
   'PER': 'PE', 'ARG': 'AR', 'BRA': 'BR', 'BOL': 'BO',
   'CHL': 'CL', 'COL': 'CO', 'ECU': 'EC', 'PRY': 'PY',
