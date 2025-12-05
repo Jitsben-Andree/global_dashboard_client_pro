@@ -1,28 +1,5 @@
-import { State } from 'country-state-city'; // Librería Real
+import { State } from 'country-state-city'; 
 import prisma from '../lib/prisma.js';
-
-
-const MOCK_PROVINCES = {
-  'PE': [
-    { id: 'PE-LIM', name: "Lima (Respaldo)" }, { id: 'PE-CUS', name: "Cusco (Respaldo)" },
-    { id: 'PE-ARE', name: "Arequipa (Respaldo)" }, { id: 'PE-PUN', name: "Puno (Respaldo)" },
-    { id: 'PE-JUN', name: "Junín" }, { id: 'PE-LAL', name: "La Libertad" }
-  ],
-  'AR': [
-    { id: 'AR-B', name: "Buenos Aires (Respaldo)" }, { id: 'AR-C', name: "CABA" },
-    { id: 'AR-X', name: "Córdoba" }, { id: 'AR-S', name: "Santa Fe" }
-  ],
-  'BR': [
-    { id: 'BR-SP', name: "São Paulo" }, { id: 'BR-RJ', name: "Rio de Janeiro" }
-  ],
-  'CO': [
-    { id: 'CO-DC', name: "Bogotá D.C." }, { id: 'CO-ANT', name: "Antioquia" }
-  ],
-  'DEFAULT': [
-    { id: 'DEF-1', name: "Región Norte (Demo)" },
-    { id: 'DEF-2', name: "Región Sur (Demo)" }
-  ]
-};
 
 const iso3ToIso2 = {
   'PER': 'PE', 'ARG': 'AR', 'BRA': 'BR', 'BOL': 'BO',
@@ -32,19 +9,18 @@ const iso3ToIso2 = {
 };
 
 export const getProvincesByCountry = async (countryCode) => {
-  const codeIso3 = countryCode.toUpperCase(); // Ej: PER
+  const codeIso3 = countryCode.toUpperCase(); 
   
   // Convertimos PER -> PE para la librería
   const codeIso2 = iso3ToIso2[codeIso3] || codeIso3.substring(0, 2); 
 
-  console.log(`📚 [PROVINCE SERVICE] Buscando para: ${codeIso3} (${codeIso2})`);
+  console.log(`📚 [PROVINCE SERVICE] Buscando datos reales para: ${codeIso3} (${codeIso2})`);
 
-  //  INTENTAR CON LIBRERÍA REAL (country-state-city)
   try {
-    console.log("⚡ Intentando obtener datos de librería 'country-state-city'...");
-    
+    //  Intentar obtener datos de librería 'country-state-city'
     const states = State.getStatesOfCountry(codeIso2);
 
+    //  Si encontramos datos reales, los procesamos
     if (states && states.length > 0) {
       console.log(` Éxito: ${states.length} provincias encontradas en librería.`);
       
@@ -53,27 +29,26 @@ export const getProvincesByCountry = async (countryCode) => {
         name: state.name
       }));
 
+      // Guardar en Caché DB (Opcional, para futuras consultas o analíticas)
       try {
         await prisma.provinceCache.upsert({
           where: { countryCode: codeIso3 },
           update: { data: formattedData, updatedAt: new Date() },
           create: { countryCode: codeIso3, data: formattedData }
         });
-      } catch (e) { /* Ignorar error de caché */ }
+      } catch (e) { 
+        console.warn(`⚠️ No se pudo guardar en caché: ${e.message}`); 
+      }
 
       return formattedData;
-    } else {
-      console.warn(` Librería retornó 0 resultados para ${codeIso2}. Pasando a Respaldo.`);
-    }
+    } 
+    
+    // Si la librería retorna 0 resultados
+    console.warn(`⚠️ La librería no tiene datos para el código: ${codeIso2}`);
+    return [];
 
   } catch (error) {
-    console.error(` Fallo en librería local: ${error.message}`);
+    console.error(`Error crítico en servicio de provincias: ${error.message}`);
+    return [];
   }
-
-  console.log(" Usando Base de Datos Simulada (Respaldo).");
-  
-  // Pequeña espera para simular carga
-  await new Promise(resolve => setTimeout(resolve, 200));
-
-  return MOCK_PROVINCES[codeIso2] || MOCK_PROVINCES['DEFAULT'];
 };
