@@ -1,8 +1,7 @@
 import { State } from 'country-state-city'; // Librería Real
 import prisma from '../lib/prisma.js';
 
-// --- BASE DE DATOS DE RESPALDO (MOCK) ---
-// Se usa si la librería falla o no encuentra datos
+
 const MOCK_PROVINCES = {
   'PE': [
     { id: 'PE-LIM', name: "Lima (Respaldo)" }, { id: 'PE-CUS', name: "Cusco (Respaldo)" },
